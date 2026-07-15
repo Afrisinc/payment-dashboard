@@ -1,0 +1,127 @@
+import type { Payment, Merchant, WebhookDelivery } from "@/types";
+
+export const mockPayments: Payment[] = [
+  {
+    id: "1",
+    reference: "TXN-2025-001",
+    amount: 50000,
+    type: "MOMO",
+    status: "SUCCESSFUL",
+    provider: "ITEC",
+    merchant: "TechStore Ltd",
+    timestamp: "2025-07-15T10:30:00Z",
+    description: "Payment for order #1234",
+  },
+  {
+    id: "2",
+    reference: "TXN-2025-002",
+    amount: 125000,
+    type: "CARD",
+    status: "PENDING",
+    provider: "STRIPE",
+    merchant: "Online Market",
+    timestamp: "2025-07-15T11:15:00Z",
+  },
+  {
+    id: "3",
+    reference: "TXN-2025-003",
+    amount: 75000,
+    type: "MOMO",
+    status: "FAILED",
+    provider: "PAYPACK",
+    merchant: "FastFood Express",
+    timestamp: "2025-07-15T09:45:00Z",
+  },
+  {
+    id: "4",
+    reference: "TXN-2025-004",
+    amount: 200000,
+    type: "STRIPE",
+    status: "PROCESSING",
+    provider: "STRIPE",
+    merchant: "Premium Services",
+    timestamp: "2025-07-15T08:20:00Z",
+  },
+  {
+    id: "5",
+    reference: "TXN-2025-005",
+    amount: 30000,
+    type: "CARD",
+    status: "SUCCESSFUL",
+    provider: "ITEC",
+    merchant: "Digital Goods",
+    timestamp: "2025-07-15T07:10:00Z",
+  },
+];
+
+export const mockMerchants: Merchant[] = [
+  {
+    id: "1",
+    name: "TechStore Ltd",
+    email: "contact@techstore.com",
+    status: "ACTIVE",
+    apiKey: "sk_live_51234567890abcdef",
+    webhookUrl: "https://api.techstore.com/webhook",
+    webhookSecret: "wh_secret_1234567890",
+    createdAt: "2024-01-15T00:00:00Z",
+  },
+  {
+    id: "2",
+    name: "Online Market",
+    email: "support@onlinemarket.com",
+    status: "ACTIVE",
+    apiKey: "sk_live_fedcba0987654321",
+    webhookUrl: "https://webhook.onlinemarket.com/payments",
+    webhookSecret: "wh_secret_fedcba09",
+    createdAt: "2024-02-20T00:00:00Z",
+  },
+  {
+    id: "3",
+    name: "FastFood Express",
+    email: "api@fastfood.com",
+    status: "INACTIVE",
+    apiKey: "sk_live_abcdef1234567890",
+    createdAt: "2024-03-10T00:00:00Z",
+  },
+];
+
+export const mockWebhooks: WebhookDelivery[] = [
+  {
+    id: "1",
+    merchantId: "1",
+    status: "DELIVERED",
+    attempt: 1,
+    timestamp: "2025-07-15T10:31:00Z",
+    payload: {
+      event: "payment.success",
+      transactionId: "TXN-2025-001",
+      amount: 50000,
+    },
+    response: '{"status":"ok"}',
+  },
+  {
+    id: "2",
+    merchantId: "1",
+    status: "FAILED",
+    attempt: 2,
+    timestamp: "2025-07-15T10:35:00Z",
+    payload: {
+      event: "payment.failed",
+      transactionId: "TXN-2025-003",
+      amount: 75000,
+    },
+    response: "502 Bad Gateway",
+  },
+  {
+    id: "3",
+    merchantId: "2",
+    status: "RETRYING",
+    attempt: 1,
+    timestamp: "2025-07-15T11:16:00Z",
+    payload: {
+      event: "payment.pending",
+      transactionId: "TXN-2025-002",
+      amount: 125000,
+    },
+  },
+];
