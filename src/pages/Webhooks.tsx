@@ -1,7 +1,7 @@
+import { useEffect, useState } from "react";
 import { Container } from "@/components/layout/Container";
 import { Card } from "@/components/ui/Card";
 import { Select } from "@/components/ui/Select";
-import { Input } from "@/components/ui/Input";
 import {
   Table,
   TableHeader,
@@ -14,7 +14,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Drawer, DrawerContent, DrawerFooter } from "@/components/ui/Drawer";
 import type { WebhookDelivery } from "@/types";
-import { mockWebhooks, mockMerchants } from "@/lib/data";
+import { useWebhooks } from "@/hooks/useWebhooks";
+import { useMerchants } from "@/hooks/useMerchants";
 
 interface WebhooksProps {
   selectedWebhook?: WebhookDelivery;
@@ -27,7 +28,49 @@ export function Webhooks({
   onSelectWebhook,
   onCloseDrawer,
 }: WebhooksProps) {
-  const currentMerchant = mockMerchants[0];
+  const {
+    loading: webhooksLoading,
+    error: webhooksError,
+    listWebhookDeliveries,
+  } = useWebhooks();
+  const { listMerchants } = useMerchants();
+  const [webhooks, setWebhooks] = useState<any[]>([]);
+  const [merchants, setMerchants] = useState<any[]>([]);
+  const [selectedMerchantId, setSelectedMerchantId] = useState<string>("");
+
+  useEffect(() => {
+    const fetchMerchants = async () => {
+      try {
+        const response = await listMerchants({ page: 1, limit: 50 });
+        setMerchants(response.data || []);
+        if (response.data && response.data.length > 0) {
+          setSelectedMerchantId(response.data[0].id);
+        }
+      } catch (err) {
+        console.error("Failed to fetch merchants:", err);
+      }
+    };
+
+    fetchMerchants();
+  }, [listMerchants]);
+
+  useEffect(() => {
+    const fetchWebhooks = async () => {
+      if (!selectedMerchantId) return;
+      try {
+        const response = await listWebhookDeliveries({
+          page: 1,
+          limit: 50,
+          merchantId: selectedMerchantId,
+        });
+        setWebhooks(response.data || []);
+      } catch (err) {
+        console.error("Failed to fetch webhooks:", err);
+      }
+    };
+
+    fetchWebhooks();
+  }, [selectedMerchantId, listWebhookDeliveries]);
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -56,85 +99,100 @@ export function Webhooks({
       <Card>
         <div className="flex flex-col gap-4">
           <div>
-            <Select label="Merchant" value={currentMerchant.id}>
-              {mockMerchants.map((merchant) => (
+            <Select
+              label="Merchant"
+              value={selectedMerchantId}
+              onChange={(e) => setSelectedMerchantId(e.target.value)}
+            >
+              {merchants.map((merchant) => (
                 <option key={merchant.id} value={merchant.id}>
                   {merchant.name}
                 </option>
               ))}
             </Select>
           </div>
-
-          {currentMerchant.webhookUrl && (
-            <div className="border-t border-border pt-4">
-              <h3 className="text-sm font-bold text-fg mb-3">Configuration</h3>
-              <div className="grid grid-cols-2 gap-3">
-                <Input
-                  label="Webhook URL"
-                  value={currentMerchant.webhookUrl}
-                  readOnly
-                  className="text-xs"
-                />
-                <Input
-                  label="Webhook Secret"
-                  value={currentMerchant.webhookSecret || ""}
-                  readOnly
-                  type="password"
-                  className="text-xs"
-                />
+          {selectedMerchantId &&
+            merchants.find((m) => m.id === selectedMerchantId)?.webhookUrl && (
+              <div className="border-t border-border pt-4">
+                <h3 className="text-xs font-medium text-fg-muted mb-2">
+                  Webhook URL
+                </h3>
+                <p className="text-xs font-mono text-fg break-all">
+                  {
+                    merchants.find((m) => m.id === selectedMerchantId)
+                      ?.webhookUrl
+                  }
+                </p>
               </div>
-            </div>
-          )}
+            )}
         </div>
       </Card>
+
+      {webhooksError && (
+        <Card className="bg-destructive/10 border-destructive/20">
+          <p className="text-xs text-destructive">
+            Error loading webhooks: {webhooksError.message}
+          </p>
+        </Card>
+      )}
 
       {/* Delivery Logs */}
       <Card>
         <h2 className="text-lg font-bold mb-4">Delivery Logs</h2>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Event</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Attempt</TableHead>
-              <TableHead>Timestamp</TableHead>
-              <TableHead>Response</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {mockWebhooks.map((webhook) => (
-              <TableRow key={webhook.id}>
-                <TableCell>
-                  <button
-                    onClick={() => onSelectWebhook(webhook)}
-                    className="text-primary-500 hover:underline font-mono text-xs"
-                  >
-                    {typeof webhook.payload === "object" &&
-                    webhook.payload.event
-                      ? String(webhook.payload.event)
-                      : "Webhook"}
-                  </button>
-                </TableCell>
-                <TableCell>
-                  <Badge variant={getStatusBadgeVariant(webhook.status)}>
-                    {getStatusLabel(webhook.status)}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-xs text-fg">
-                  #{webhook.attempt}
-                </TableCell>
-                <TableCell className="text-xs text-fg-muted">
-                  {new Date(webhook.timestamp).toLocaleString()}
-                </TableCell>
-                <TableCell className="text-xs text-fg-muted">
-                  {webhook.response
-                    ? webhook.response.substring(0, 20) + "..."
-                    : "—"}
-                </TableCell>
+        {webhooksLoading ? (
+          <div className="text-xs text-fg-muted text-center py-4">
+            Loading webhooks...
+          </div>
+        ) : webhooks.length === 0 ? (
+          <div className="text-xs text-fg-muted text-center py-4">
+            No webhooks found
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Event</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Attempt</TableHead>
+                <TableHead>Timestamp</TableHead>
+                <TableHead>Response</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {webhooks.map((webhook) => (
+                <TableRow key={webhook.id}>
+                  <TableCell>
+                    <button
+                      onClick={() => onSelectWebhook(webhook)}
+                      className="text-primary-500 hover:underline font-mono text-xs"
+                    >
+                      {typeof webhook.payload === "object" &&
+                      webhook.payload.event
+                        ? String(webhook.payload.event)
+                        : "Webhook"}
+                    </button>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusBadgeVariant(webhook.status)}>
+                      {getStatusLabel(webhook.status)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-xs text-fg">
+                    #{webhook.attempt}
+                  </TableCell>
+                  <TableCell className="text-xs text-fg-muted">
+                    {new Date(webhook.timestamp).toLocaleString()}
+                  </TableCell>
+                  <TableCell className="text-xs text-fg-muted">
+                    {webhook.response
+                      ? webhook.response.substring(0, 20) + "..."
+                      : "—"}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </Card>
 
       {/* Webhook Delivery Detail Drawer */}

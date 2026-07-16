@@ -8,10 +8,12 @@ import type {
 } from "@/types";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Container } from "@/components/layout/Container";
+import { Loader } from "@/components/ui/Loader";
 import { Dashboard } from "@/pages/Dashboard";
 import { Payments } from "@/pages/Payments";
 import { Merchants } from "@/pages/Merchants";
 import { Webhooks } from "@/pages/Webhooks";
+import { setAuthToken } from "@/lib/api";
 
 const navigationIcons = {
   dashboard: (
@@ -90,8 +92,22 @@ const pageLabels: Record<Page, string> = {
 };
 
 export default function App() {
+  const [isReady, setIsReady] = useState(false);
+
   useEffect(() => {
     document.documentElement.classList.add("dark");
+
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+
+    if (token) {
+      setAuthToken(token);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
+    // Mark app as ready after brief delay to ensure auth is set
+    const timer = setTimeout(() => setIsReady(true), 300);
+    return () => clearTimeout(timer);
   }, []);
 
   const [state, setState] = useState<AppState>({
@@ -227,6 +243,10 @@ export default function App() {
         );
     }
   };
+
+  if (!isReady) {
+    return <Loader message="Initializing dashboard..." submessage="Authenticating your session" />;
+  }
 
   return <MainLayout navItems={navItems}>{renderPage()}</MainLayout>;
 }

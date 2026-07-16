@@ -15,7 +15,7 @@ export function Loader({
     <div
       className={cn(
         "min-h-screen flex items-center justify-center relative overflow-hidden bg-bg text-fg",
-        className
+        className,
       )}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-bg to-primary/10 opacity-50" />

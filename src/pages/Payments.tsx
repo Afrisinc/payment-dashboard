@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Container } from "@/components/layout/Container";
 import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
@@ -13,6 +14,7 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { Drawer, DrawerContent, DrawerFooter } from "@/components/ui/Drawer";
 import { Button } from "@/components/ui/Button";
+import { usePayments } from "@/hooks/usePayments";
 import type {
   Payment,
   PaymentStatus,
@@ -20,7 +22,6 @@ import type {
   PaymentType,
   AppState,
 } from "@/types";
-import { mockPayments } from "@/lib/data";
 
 interface PaymentsProps {
   selectedPayment?: Payment;
@@ -43,19 +44,40 @@ export function Payments({
   typeFilter,
   onUpdateFilters,
 }: PaymentsProps) {
-  const filteredPayments = mockPayments.filter((payment) => {
+  const { loading, error, listAdminPayments } = usePayments();
+  const [payments, setPayments] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchPayments = async () => {
+      try {
+        const filters: any = { page: 1, limit: 50 };
+
+        if (statusFilter !== "ALL") filters.status = statusFilter;
+        if (typeFilter !== "ALL") {
+          filters.type =
+            typeFilter === "MOMO" ? "mobile" : typeFilter.toLowerCase();
+        }
+        if (providerFilter !== "ALL") {
+          filters.provider = providerFilter;
+        }
+
+        const response = await listAdminPayments(filters);
+        setPayments(response.data || []);
+      } catch (err) {
+        console.error("Failed to fetch payments:", err);
+      }
+    };
+
+    fetchPayments();
+  }, [statusFilter, typeFilter, providerFilter, listAdminPayments]);
+
+  const filteredPayments = payments.filter((payment) => {
     const matchesSearch =
       !searchQuery ||
-      payment.reference.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payment.merchant.toLowerCase().includes(searchQuery.toLowerCase());
+      payment.ref.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      payment.merchantId.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const matchesStatus =
-      statusFilter === "ALL" || payment.status === statusFilter;
-    const matchesProvider =
-      providerFilter === "ALL" || payment.provider === providerFilter;
-    const matchesType = typeFilter === "ALL" || payment.type === typeFilter;
-
-    return matchesSearch && matchesStatus && matchesProvider && matchesType;
+    return matchesSearch;
   });
 
   const getStatusBadgeVariant = (status: string) => {
@@ -68,8 +90,6 @@ export function Payments({
         return "processing";
       case "FAILED":
         return "destructive";
-      case "CANCELLED":
-        return "inactive";
       default:
         return "default";
     }
@@ -79,9 +99,31 @@ export function Payments({
     return status.charAt(0) + status.slice(1).toLowerCase();
   };
 
+  const handleSelectPayment = (payment: any) => {
+    const mappedPayment: Payment = {
+      id: payment.id,
+      reference: payment.ref,
+      amount: payment.amount,
+      type: payment.type === "mobile" ? "MOMO" : payment.type.toUpperCase(),
+      status: payment.status,
+      provider: payment.provider,
+      merchant: payment.merchantId,
+      timestamp: payment.createdAt,
+    };
+    onSelectPayment(mappedPayment);
+  };
+
   return (
     <Container className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold tracking-tight">Payments</h1>
+
+      {error && (
+        <Card className="bg-destructive/10 border-destructive/20">
+          <p className="text-xs text-destructive">
+            Error loading payments: {error.message || JSON.stringify(error)}
+          </p>
+        </Card>
+      )}
 
       {/* Filters */}
       <Card>
@@ -147,54 +189,65 @@ export function Payments({
             <option value="PENDING">Pending</option>
             <option value="PROCESSING">Processing</option>
             <option value="FAILED">Failed</option>
-            <option value="CANCELLED">Cancelled</option>
           </Select>
         </div>
       </Card>
 
       {/* Payments Table */}
       <Card>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Reference</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Provider</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Merchant</TableHead>
-              <TableHead>Timestamp</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredPayments.map((payment) => (
-              <TableRow key={payment.id}>
-                <TableCell>
-                  <button
-                    onClick={() => onSelectPayment(payment)}
-                    className="text-primary-500 hover:underline font-mono text-xs"
-                  >
-                    {payment.reference}
-                  </button>
-                </TableCell>
-                <TableCell className="font-mono text-xs">
-                  {payment.amount.toLocaleString()} FRW
-                </TableCell>
-                <TableCell>{payment.type}</TableCell>
-                <TableCell>{payment.provider}</TableCell>
-                <TableCell>
-                  <Badge variant={getStatusBadgeVariant(payment.status)}>
-                    {getStatusLabel(payment.status)}
-                  </Badge>
-                </TableCell>
-                <TableCell>{payment.merchant}</TableCell>
-                <TableCell className="text-xs">
-                  {new Date(payment.timestamp).toLocaleString()}
-                </TableCell>
+        {loading ? (
+          <div className="text-xs text-fg-muted text-center py-4">
+            Loading payments...
+          </div>
+        ) : filteredPayments.length === 0 ? (
+          <div className="text-xs text-fg-muted text-center py-4">
+            No payments found
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Reference</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Provider</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Merchant</TableHead>
+                <TableHead>Timestamp</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {filteredPayments.map((payment, index) => (
+                <TableRow key={`${payment.id}-${payment.ref}-${index}`}>
+                  <TableCell>
+                    <button
+                      onClick={() => handleSelectPayment(payment)}
+                      className="text-primary-500 hover:underline font-mono text-xs"
+                    >
+                      {payment.ref}
+                    </button>
+                  </TableCell>
+                  <TableCell className="font-mono text-xs">
+                    {payment.amount.toLocaleString()} FRW
+                  </TableCell>
+                  <TableCell>{payment.type.toUpperCase()}</TableCell>
+                  <TableCell>{payment.provider}</TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusBadgeVariant(payment.status)}>
+                      {getStatusLabel(payment.status)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-xs text-fg-muted">
+                    {payment.merchantId}
+                  </TableCell>
+                  <TableCell className="text-xs">
+                    {new Date(payment.createdAt).toLocaleString()}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </Card>
 
       {/* Payment Detail Drawer */}
@@ -270,16 +323,6 @@ export function Payments({
                       {new Date(selectedPayment.timestamp).toLocaleString()}
                     </p>
                   </div>
-                  {selectedPayment.description && (
-                    <div>
-                      <h4 className="text-xs font-medium text-fg-muted mb-2">
-                        Description
-                      </h4>
-                      <p className="text-xs text-fg">
-                        {selectedPayment.description}
-                      </p>
-                    </div>
-                  )}
                 </div>
               </div>
             </DrawerContent>

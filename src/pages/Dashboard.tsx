@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Container } from "@/components/layout/Container";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -10,30 +11,40 @@ import {
   TableCell,
 } from "@/components/ui/Table";
 import { Badge } from "@/components/ui/Badge";
+import { useDashboard } from "@/hooks/useDashboard";
+import { usePayments } from "@/hooks/usePayments";
 import type { Payment } from "@/types";
-import { mockPayments } from "@/lib/data";
 
 interface DashboardProps {
   onSelectPayment: (payment: Payment) => void;
 }
 
 export function Dashboard({ onSelectPayment }: DashboardProps) {
-  const todayTransactions = mockPayments.filter(
-    (p) => new Date(p.timestamp).toDateString() === new Date().toDateString(),
-  ).length;
+  const {
+    loading: metricsLoading,
+    error: metricsError,
+    getMetrics,
+  } = useDashboard();
+  const { loading: paymentsLoading, listAdminPayments } = usePayments();
 
-  const todayVolume = mockPayments
-    .filter(
-      (p) => new Date(p.timestamp).toDateString() === new Date().toDateString(),
-    )
-    .reduce((sum, p) => sum + p.amount, 0);
+  const [metrics, setMetrics] = useState<any>(null);
+  const [recentPayments, setRecentPayments] = useState<any[]>([]);
 
-  const successfulCount = mockPayments.filter(
-    (p) => p.status === "SUCCESSFUL",
-  ).length;
-  const pendingCount = mockPayments.filter(
-    (p) => p.status === "PENDING",
-  ).length;
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [metricsData, paymentsData] = await Promise.all([
+          getMetrics(),
+          listAdminPayments({ page: 1, limit: 5, status: "SUCCESSFUL" }),
+        ]);
+        setMetrics(metricsData);
+        setRecentPayments(paymentsData.data || []);
+      } catch (err) {
+        console.error("Failed to fetch dashboard data:", err);
+      }
+    };
+    fetchData();
+  }, []);
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -45,8 +56,6 @@ export function Dashboard({ onSelectPayment }: DashboardProps) {
         return "processing";
       case "FAILED":
         return "destructive";
-      case "CANCELLED":
-        return "inactive";
       default:
         return "default";
     }
@@ -54,6 +63,20 @@ export function Dashboard({ onSelectPayment }: DashboardProps) {
 
   const getStatusLabel = (status: string) => {
     return status.charAt(0) + status.slice(1).toLowerCase();
+  };
+
+  const handleSelectPayment = (payment: any) => {
+    const mappedPayment: Payment = {
+      id: payment.id,
+      reference: payment.ref,
+      amount: payment.amount,
+      type: payment.type === "mobile" ? "MOMO" : payment.type.toUpperCase(),
+      status: payment.status,
+      provider: payment.provider,
+      merchant: payment.merchantId,
+      timestamp: payment.createdAt,
+    };
+    onSelectPayment(mappedPayment);
   };
 
   return (
@@ -103,6 +126,14 @@ export function Dashboard({ onSelectPayment }: DashboardProps) {
         </div>
       </div>
 
+      {metricsError && (
+        <Card className="bg-destructive/10 border-destructive/20">
+          <p className="text-xs text-destructive">
+            Error loading metrics: {metricsError.message}
+          </p>
+        </Card>
+      )}
+
       {/* Stat Cards */}
       <div className="grid grid-cols-4 gap-3">
         <Card hover>
@@ -122,7 +153,7 @@ export function Dashboard({ onSelectPayment }: DashboardProps) {
             </svg>
           </div>
           <div className="text-2xl font-bold text-fg mb-1">
-            {todayTransactions}
+            {metricsLoading ? "-" : metrics?.totalTransactionsToday || 0}
           </div>
           <div className="text-xs font-semibold text-success-light">
             ↑ 12%{" "}
@@ -148,7 +179,10 @@ export function Dashboard({ onSelectPayment }: DashboardProps) {
             </svg>
           </div>
           <div className="text-2xl font-bold text-fg mb-1">
-            {todayVolume.toLocaleString()} FRW
+            {metricsLoading
+              ? "-"
+              : (metrics?.totalVolumeToday || 0).toLocaleString()}{" "}
+            FRW
           </div>
           <div className="text-xs font-semibold text-success-light">
             ↑ 8% <span className="font-normal text-fg-muted">vs yesterday</span>
@@ -172,7 +206,9 @@ export function Dashboard({ onSelectPayment }: DashboardProps) {
             </svg>
           </div>
           <div className="text-2xl font-bold text-fg mb-1">
-            {successfulCount}
+            {metricsLoading
+              ? "-"
+              : metrics?.statusDistribution?.SUCCESSFUL || 0}
           </div>
           <div className="text-xs font-semibold text-success-light">
             ↑ 5% <span className="font-normal text-fg-muted">this week</span>
@@ -194,7 +230,9 @@ export function Dashboard({ onSelectPayment }: DashboardProps) {
               <polyline points="12 6 12 12 16 14"></polyline>
             </svg>
           </div>
-          <div className="text-2xl font-bold text-fg mb-1">{pendingCount}</div>
+          <div className="text-2xl font-bold text-fg mb-1">
+            {metricsLoading ? "-" : metrics?.statusDistribution?.PENDING || 0}
+          </div>
           <div className="text-xs font-semibold text-warning-light">
             ↑ 2% <span className="font-normal text-fg-muted">this week</span>
           </div>
@@ -204,47 +242,59 @@ export function Dashboard({ onSelectPayment }: DashboardProps) {
       {/* Recent Transactions */}
       <Card>
         <h2 className="text-lg font-bold mb-4">Recent Transactions</h2>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Reference</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Type</TableHead>
-              <TableHead>Provider</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Merchant</TableHead>
-              <TableHead>Time</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {mockPayments.slice(0, 5).map((payment) => (
-              <TableRow key={payment.id}>
-                <TableCell>
-                  <button
-                    onClick={() => onSelectPayment(payment)}
-                    className="text-primary-500 hover:underline font-mono text-xs"
-                  >
-                    {payment.reference}
-                  </button>
-                </TableCell>
-                <TableCell className="font-mono text-xs">
-                  {payment.amount.toLocaleString()} FRW
-                </TableCell>
-                <TableCell>{payment.type}</TableCell>
-                <TableCell>{payment.provider}</TableCell>
-                <TableCell>
-                  <Badge variant={getStatusBadgeVariant(payment.status)}>
-                    {getStatusLabel(payment.status)}
-                  </Badge>
-                </TableCell>
-                <TableCell>{payment.merchant}</TableCell>
-                <TableCell className="text-xs">
-                  {new Date(payment.timestamp).toLocaleTimeString()}
-                </TableCell>
+        {paymentsLoading ? (
+          <div className="text-xs text-fg-muted text-center py-4">
+            Loading payments...
+          </div>
+        ) : recentPayments.length === 0 ? (
+          <div className="text-xs text-fg-muted text-center py-4">
+            No payments found
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Reference</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Provider</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Merchant</TableHead>
+                <TableHead>Time</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {recentPayments.map((payment) => (
+                <TableRow key={payment.id}>
+                  <TableCell>
+                    <button
+                      onClick={() => handleSelectPayment(payment)}
+                      className="text-primary-500 hover:underline font-mono text-xs"
+                    >
+                      {payment.ref}
+                    </button>
+                  </TableCell>
+                  <TableCell className="font-mono text-xs">
+                    {payment.amount.toLocaleString()} FRW
+                  </TableCell>
+                  <TableCell>{payment.type.toUpperCase()}</TableCell>
+                  <TableCell>{payment.provider}</TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusBadgeVariant(payment.status)}>
+                      {getStatusLabel(payment.status)}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-xs text-fg-muted">
+                    {payment.merchantId}
+                  </TableCell>
+                  <TableCell className="text-xs">
+                    {new Date(payment.createdAt).toLocaleTimeString()}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </Card>
     </Container>
   );
