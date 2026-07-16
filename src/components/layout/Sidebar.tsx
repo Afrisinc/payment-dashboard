@@ -2,23 +2,26 @@ import { cn } from "@/lib/cn";
 import { Avatar } from "@/components/ui/Avatar";
 
 interface NavItem {
-  id: string;
-  label: string;
-  icon: React.ReactNode;
-  isActive: boolean;
-  onClick: () => void;
+  readonly id: string;
+  readonly label: string;
+  readonly icon: React.ReactNode;
+  readonly isActive: boolean;
+  readonly onClick: () => void;
 }
 
 interface SidebarProps {
-  navItems: NavItem[];
+  readonly navItems: readonly NavItem[];
 }
 
 export function Sidebar({ navItems }: SidebarProps) {
   return (
     <aside className="w-56 flex-none flex flex-col bg-sidebar-bg border-r border-sidebar-border">
-      {/* Logo */}
       <div className="flex items-center gap-2 px-4 py-4 pb-4">
-        <Avatar name="A" size="md" variant="default" />
+        <img
+          src="/afrisic-logo.png"
+          alt="Afrisinc"
+          className="w-10 h-10 rounded-lg object-contain"
+        />
         <div className="flex flex-col gap-0.5">
           <span className="text-sm font-bold tracking-tight text-fg">
             AfrisinC Pay

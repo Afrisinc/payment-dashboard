@@ -5,7 +5,6 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Primary colors
         primary: {
           50: '#E6F7FF',
           100: '#CCE9FB',
@@ -18,12 +17,10 @@ export default {
           800: '#014478',
           900: '#002D50',
         },
-        // Secondary colors
         secondary: {
           DEFAULT: 'hsl(160, 40%, 25%)',
           light: 'hsl(160, 40%, 35%)',
         },
-        // Status colors
         success: {
           DEFAULT: 'hsl(152, 60%, 40%)',
           light: 'hsl(152, 60%, 55%)',
@@ -39,7 +36,6 @@ export default {
           light: 'hsl(0, 62%, 50%)',
           fg: 'hsl(0, 0%, 100%)',
         },
-        // Semantic colors (dark mode)
         bg: {
           DEFAULT: 'hsl(224, 20%, 5%)',
           card: 'hsl(224, 18%, 8%)',
@@ -103,7 +99,7 @@ export default {
         md: '0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06)',
         lg: '0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)',
         xl: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)',
-        'primary': '0 8px 16px 0 rgba(2,147,228,0.15)',
+        primary: '0 8px 16px 0 rgba(2,147,228,0.15)',
       },
       backgroundImage: {
         'gradient-hero': 'linear-gradient(180deg, hsl(224 20% 8%) 0%, hsl(224 20% 5%) 100%)',
@@ -112,12 +108,12 @@ export default {
       },
       keyframes: {
         fadeIn: {
-          'from': { opacity: '0' },
-          'to': { opacity: '1' },
+          from: { opacity: '0' },
+          to: { opacity: '1' },
         },
         drawerIn: {
-          'from': { transform: 'translateX(40px)', opacity: '0' },
-          'to': { transform: 'translateX(0)', opacity: '1' },
+          from: { transform: 'translateX(40px)', opacity: '0' },
+          to: { transform: 'translateX(0)', opacity: '1' },
         },
       },
       animation: {
