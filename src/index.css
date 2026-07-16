@@ -18,6 +18,10 @@ html {
   --payment-primary-300: #66beee;
   --payment-primary-200: #9bd3f6;
   --payment-primary-100: #cce9fb;
+  --payment-primary-light: #3dc2f0;
+  --payment-primary-lighter: #66d9f8;
+  --payment-primary-pale: #e6f7ff;
+  --payment-primary-muted: #0277c2;
 
   --payment-secondary: hsl(160, 40%, 25%);
   --payment-secondary-light: hsl(160, 40%, 35%);
@@ -113,6 +117,10 @@ html {
 
   --payment-primary: hsl(187, 85%, 48%);
   --payment-primary-fg: hsl(224, 20%, 5%);
+  --payment-primary-light: hsl(187, 85%, 55%);
+  --payment-primary-lighter: hsl(187, 85%, 62%);
+  --payment-primary-pale: hsl(187, 85%, 25%);
+  --payment-primary-muted: hsl(187, 70%, 35%);
   --payment-accent: hsl(224, 14%, 14%);
   --payment-accent-fg: hsl(187, 85%, 60%);
 

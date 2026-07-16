@@ -17,3 +17,6 @@ export function getEnv(key: string): string {
 
 export const API_BASE_URL =
   getEnv("VITE_API_BASE_URL") || "http://localhost:3000/api/v1";
+
+export const AUTH_UI_URL =
+  getEnv("VITE_AUTH_UI_URL") || "http://localhost:8098";

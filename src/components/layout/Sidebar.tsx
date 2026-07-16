@@ -1,5 +1,6 @@
 import { cn } from "@/lib/cn";
 import { Avatar } from "@/components/ui/Avatar";
+import { logout } from "@/lib/api";
 
 interface NavItem {
   readonly id: string;
@@ -70,6 +71,28 @@ export function Sidebar({ navItems }: SidebarProps) {
             <span className="text-xs text-fg-muted">Super Admin</span>
           </div>
         </div>
+        <button
+          onClick={logout}
+          className={cn(
+            "mt-2 w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-medium",
+            "transition-colors border-none cursor-pointer",
+            "text-sidebar-fg hover:bg-destructive/10 hover:text-destructive",
+          )}
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+            <polyline points="16 17 21 12 16 7" />
+            <line x1="21" y1="12" x2="9" y2="12" />
+          </svg>
+          <span>Logout</span>
+        </button>
       </div>
     </aside>
   );

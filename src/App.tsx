@@ -105,8 +105,8 @@ export default function App() {
       window.history.replaceState({}, document.title, window.location.pathname);
     }
 
-    // Mark app as ready after brief delay to ensure auth is set
-    const timer = setTimeout(() => setIsReady(true), 300);
+    // Mark app as ready after 3 seconds to ensure full initialization
+    const timer = setTimeout(() => setIsReady(true), 3000);
     return () => clearTimeout(timer);
   }, []);
 

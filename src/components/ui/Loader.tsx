@@ -14,44 +14,38 @@ export function Loader({
   return (
     <div
       className={cn(
-        "min-h-screen flex items-center justify-center relative overflow-hidden bg-bg text-fg",
+        "min-h-screen flex items-center justify-center relative overflow-hidden",
         className,
       )}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-bg to-primary/10 opacity-50" />
-      <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-primary/10 blur-3xl animate-pulse" />
-      <div className="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full bg-primary/5 blur-3xl animate-pulse" />
+      {/* Animated gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-bg to-primary-pale/30 animate-gradient" />
+      <div className="absolute top-1/4 -left-32 w-96 h-96 rounded-full bg-primary/5 blur-3xl animate-blob" />
+      <div className="absolute bottom-1/4 -right-32 w-96 h-96 rounded-full bg-primary-light/5 blur-3xl animate-blob animation-delay-2000" />
 
       <div className="relative z-10 flex flex-col items-center gap-8">
-        <div className="animate-pulse">
+        {/* Logo */}
+        <div className="animate-logo-pulse">
           <img
             src="/afrisic-logo.png"
             alt="Afrisinc"
-            className="w-20 h-20 rounded-2xl object-contain shadow-lg"
-            style={{ boxShadow: "var(--payment-shadow-lg)" }}
+            className="w-16 h-16 rounded-2xl object-contain shadow-lg shadow-primary/25"
           />
         </div>
 
-        <div className="text-center animate-fadeIn">
-          <p className="text-lg font-medium text-fg">{message}</p>
+        {/* Message */}
+        <div className="text-center animate-fade-in-up animation-delay-300">
+          <p className="text-lg font-semibold text-fg">{message}</p>
           {submessage && (
             <p className="text-sm text-fg-muted mt-1">{submessage}</p>
           )}
         </div>
 
+        {/* Dots loader */}
         <div className="flex items-center gap-2">
-          <span
-            className="w-2.5 h-2.5 rounded-full bg-primary animate-bounce"
-            style={{ animationDelay: "0s" }}
-          />
-          <span
-            className="w-2.5 h-2.5 rounded-full bg-primary animate-bounce"
-            style={{ animationDelay: "0.15s" }}
-          />
-          <span
-            className="w-2.5 h-2.5 rounded-full bg-primary animate-bounce"
-            style={{ animationDelay: "0.3s" }}
-          />
+          <span className="w-2.5 h-2.5 rounded-full bg-primary animate-dot-bounce" />
+          <span className="w-2.5 h-2.5 rounded-full bg-primary-light animate-dot-bounce animation-delay-150" />
+          <span className="w-2.5 h-2.5 rounded-full bg-primary-lighter animate-dot-bounce animation-delay-300" />
         </div>
       </div>
     </div>

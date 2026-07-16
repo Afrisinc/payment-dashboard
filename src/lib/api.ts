@@ -1,5 +1,5 @@
 import type { ApiError } from "@/types/payment";
-import { API_BASE_URL } from "./env";
+import { API_BASE_URL, AUTH_UI_URL } from "./env";
 
 const API_TOKEN_KEY = "payment_dashboard_token";
 
@@ -13,6 +13,12 @@ export function setAuthToken(token: string): void {
 
 export function clearAuthToken(): void {
   localStorage.removeItem(API_TOKEN_KEY);
+}
+
+export function logout(): void {
+  clearAuthToken();
+  localStorage.clear();
+  window.location.href = AUTH_UI_URL;
 }
 
 interface FetchOptions extends Omit<RequestInit, "body"> {

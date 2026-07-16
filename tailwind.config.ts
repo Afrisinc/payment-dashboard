@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss';
+import plugin from 'tailwindcss/plugin';
 
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
@@ -16,6 +17,10 @@ export default {
           700: '#025BA0',
           800: '#014478',
           900: '#002D50',
+          light: 'var(--payment-primary-light)',
+          lighter: 'var(--payment-primary-lighter)',
+          pale: 'var(--payment-primary-pale)',
+          muted: 'var(--payment-primary-muted)',
         },
         secondary: {
           DEFAULT: 'hsl(160, 40%, 25%)',
@@ -111,16 +116,56 @@ export default {
           from: { opacity: '0' },
           to: { opacity: '1' },
         },
+        'fade-in-up': {
+          '0%': { opacity: '0', transform: 'translateY(16px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
         drawerIn: {
           from: { transform: 'translateX(40px)', opacity: '0' },
           to: { transform: 'translateX(0)', opacity: '1' },
         },
+        'logo-pulse': {
+          '0%, 100%': { transform: 'scale(1)', opacity: '1' },
+          '50%': { transform: 'scale(1.06)', opacity: '0.85' },
+        },
+        'dot-bounce': {
+          '0%, 80%, 100%': { transform: 'scale(0.6)', opacity: '0.4' },
+          '40%': { transform: 'scale(1)', opacity: '1' },
+        },
+        blob: {
+          '0%, 100%': { transform: 'translate(0, 0) scale(1)' },
+          '33%': { transform: 'translate(30px, -20px) scale(1.05)' },
+          '66%': { transform: 'translate(-20px, 20px) scale(0.95)' },
+        },
+        gradient: {
+          '0%, 100%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+        },
       },
       animation: {
         fadeIn: 'fadeIn 0.4s ease-out',
+        'fade-in-up': 'fade-in-up 0.5s ease-out both',
         drawerIn: 'drawerIn 0.25s ease-out',
+        'logo-pulse': 'logo-pulse 2s ease-in-out infinite',
+        'dot-bounce': 'dot-bounce 1.4s ease-in-out infinite',
+        blob: 'blob 7s ease-in-out infinite',
+        gradient: 'gradient 6s ease infinite',
       },
     },
   },
-  plugins: [],
+  plugins: [
+    plugin(function ({ addUtilities }) {
+      addUtilities({
+        '.animation-delay-150': {
+          animationDelay: '150ms',
+        },
+        '.animation-delay-300': {
+          animationDelay: '300ms',
+        },
+        '.animation-delay-2000': {
+          animationDelay: '2000ms',
+        },
+      });
+    }),
+  ],
 } satisfies Config;
