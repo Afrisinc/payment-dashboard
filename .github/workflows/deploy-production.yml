@@ -13,4 +13,3 @@ jobs:
       app-name: payment-dashboard
       environment: prod
       dockerfile-path: .
-    secrets: inherit
