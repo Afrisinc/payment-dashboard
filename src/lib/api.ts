@@ -65,7 +65,7 @@ class ApiClient {
     const headers = this.getHeaders();
 
     const config: RequestInit = {
-      ...options,
+      method: options.method,
       headers: {
         ...headers,
         ...(options.headers as Record<string, string>),
