@@ -245,7 +245,12 @@ export default function App() {
   };
 
   if (!isReady) {
-    return <Loader message="Initializing dashboard..." submessage="Authenticating your session" />;
+    return (
+      <Loader
+        message="Initializing dashboard..."
+        submessage="Authenticating your session"
+      />
+    );
   }
 
   return <MainLayout navItems={navItems}>{renderPage()}</MainLayout>;
