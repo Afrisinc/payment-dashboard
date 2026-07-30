@@ -136,7 +136,9 @@ export function usePayments(): UsePaymentsResult {
       setError(null);
 
       try {
-        const response = await apiClient.post(`/admin/payments/${id}/refresh-status`);
+        const response = await apiClient.post(
+          `/admin/payments/${id}/refresh-status`,
+        );
         return response;
       } catch (err) {
         const error = err as ApiError;

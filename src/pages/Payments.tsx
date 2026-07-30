@@ -107,7 +107,8 @@ export function Payments({
   const handleRefreshStatus = async (paymentId: string) => {
     setRefreshingId(paymentId);
     try {
-      const updatedPayment = await refreshPaymentStatus(paymentId);
+      const response = await refreshPaymentStatus(paymentId);
+      const updatedPayment = response.data || response;
       setPayments((prevPayments) =>
         prevPayments.map((p) =>
           p.id === paymentId ? { ...p, ...updatedPayment } : p,
@@ -117,7 +118,7 @@ export function Payments({
         const mappedPayment: Payment = {
           id: updatedPayment.id,
           reference: updatedPayment.ref,
-          amount: updatedPayment.amount,
+          amount: selectedPayment.amount,
           type:
             updatedPayment.type === "mobile"
               ? "MOMO"
@@ -125,7 +126,7 @@ export function Payments({
           status: updatedPayment.status,
           provider: updatedPayment.provider,
           merchant: updatedPayment.merchantId,
-          timestamp: updatedPayment.createdAt,
+          timestamp: selectedPayment.timestamp,
         };
         onSelectPayment(mappedPayment);
       }
@@ -232,7 +233,7 @@ export function Payments({
 
       {/* Payments Table */}
       <Card>
-        {loading ? (
+        {loading && payments.length === 0 ? (
           <div className="text-xs text-fg-muted text-center py-4">
             Loading payments...
           </div>
