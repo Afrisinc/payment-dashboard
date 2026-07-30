@@ -96,6 +96,9 @@ class ApiClient {
           error.code = errorData.error.code || error.code;
           error.message = errorData.error.message || error.message;
           error.details = errorData.error.details;
+        } else if (errorData.resp_msg) {
+          error.code = String(errorData.resp_code || response.status);
+          error.message = errorData.resp_msg;
         }
       } catch {
         // Ignore parse errors, use default error message

@@ -22,6 +22,7 @@ import type {
   PaymentType,
   AppState,
 } from "@/types";
+import type { ApiError } from "@/types/payment";
 
 interface PaymentsProps {
   selectedPayment?: Payment;
@@ -48,6 +49,7 @@ export function Payments({
     usePayments();
   const [payments, setPayments] = useState<any[]>([]);
   const [refreshingId, setRefreshingId] = useState<string | null>(null);
+  const [retryError, setRetryError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -106,6 +108,7 @@ export function Payments({
 
   const handleRefreshStatus = async (paymentId: string) => {
     setRefreshingId(paymentId);
+    setRetryError(null);
     try {
       const response = await refreshPaymentStatus(paymentId);
       const updatedPayment = response.data || response;
@@ -130,8 +133,12 @@ export function Payments({
         };
         onSelectPayment(mappedPayment);
       }
-    } catch {
-      // Error handled by hook
+    } catch (err) {
+      const errorMsg =
+        (err as ApiError)?.message ||
+        "Failed to refresh payment status";
+      setRetryError(errorMsg);
+      setTimeout(() => setRetryError(null), 5000);
     } finally {
       setRefreshingId(null);
     }
@@ -160,6 +167,12 @@ export function Payments({
           <p className="text-xs text-destructive">
             Error loading payments: {error.message || JSON.stringify(error)}
           </p>
+        </Card>
+      )}
+
+      {retryError && (
+        <Card className="bg-destructive/10 border-destructive/20">
+          <p className="text-xs text-destructive">{retryError}</p>
         </Card>
       )}
 
