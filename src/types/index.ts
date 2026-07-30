@@ -5,6 +5,52 @@ export type Provider = "ITEC" | "PAYPACK" | "STRIPE";
 export type WebhookDeliveryStatus =
   "DELIVERED" | "FAILED" | "RETRYING" | "PENDING";
 
+export type MobilePaymentType = "CASHIN" | "CASHOUT";
+export type MobilePaymentStatus = "PENDING" | "PROCESSING" | "SUCCESSFUL" | "FAILED";
+export type MobileProvider = "itec" | "paypack";
+
+export interface MobilePayment {
+  id: string;
+  ref: string;
+  orderId: string;
+  amount: number;
+  currency: string;
+  phoneNumber: string;
+  type: MobilePaymentType;
+  status: MobilePaymentStatus;
+  fee: number;
+  provider: string | null;
+  createdAt: string;
+  customerName?: string;
+  description?: string;
+}
+
+export interface MobileAccountInfo {
+  balance: number;
+  currency: string;
+  merchantName: string;
+  inRate: number;
+  outRate: number;
+}
+
+export interface CashinRequest {
+  orderId: string;
+  amount: number;
+  phoneNumber: string;
+  customerName?: string;
+  description?: string;
+  provider?: MobileProvider;
+}
+
+export interface CashoutRequest {
+  orderId: string;
+  amount: number;
+  phoneNumber: string;
+  recipientName?: string;
+  description?: string;
+  provider?: MobileProvider;
+}
+
 export interface Payment {
   id: string;
   reference: string;
@@ -41,6 +87,7 @@ export interface WebhookDelivery {
 export type Page =
   | "dashboard"
   | "payments"
+  | "mobile-payments"
   | "merchants"
   | "webhooks"
   | "reports"
@@ -53,6 +100,7 @@ export interface AppState {
   selectedPayment?: Payment;
   selectedMerchant?: Merchant;
   selectedWebhook?: WebhookDelivery;
+  selectedMobilePayment?: MobilePayment;
   searchQuery: string;
   statusFilter: PaymentStatus | "ALL";
   providerFilter: Provider | "ALL";
