@@ -107,9 +107,28 @@ export function Payments({
   const handleRefreshStatus = async (paymentId: string) => {
     setRefreshingId(paymentId);
     try {
-      await refreshPaymentStatus(paymentId);
-      const response = await listAdminPayments({ page: 1, limit: 50 });
-      setPayments(response.data || []);
+      const updatedPayment = await refreshPaymentStatus(paymentId);
+      setPayments((prevPayments) =>
+        prevPayments.map((p) =>
+          p.id === paymentId ? { ...p, ...updatedPayment } : p,
+        ),
+      );
+      if (selectedPayment?.id === paymentId) {
+        const mappedPayment: Payment = {
+          id: updatedPayment.id,
+          reference: updatedPayment.ref,
+          amount: updatedPayment.amount,
+          type:
+            updatedPayment.type === "mobile"
+              ? "MOMO"
+              : updatedPayment.type.toUpperCase(),
+          status: updatedPayment.status,
+          provider: updatedPayment.provider,
+          merchant: updatedPayment.merchantId,
+          timestamp: updatedPayment.createdAt,
+        };
+        onSelectPayment(mappedPayment);
+      }
     } catch {
       // Error handled by hook
     } finally {
