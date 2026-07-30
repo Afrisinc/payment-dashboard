@@ -44,8 +44,10 @@ export function Payments({
   typeFilter,
   onUpdateFilters,
 }: PaymentsProps) {
-  const { loading, error, listAdminPayments } = usePayments();
+  const { loading, error, listAdminPayments, refreshPaymentStatus } =
+    usePayments();
   const [payments, setPayments] = useState<any[]>([]);
+  const [refreshingId, setRefreshingId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPayments = async () => {
@@ -63,8 +65,8 @@ export function Payments({
 
         const response = await listAdminPayments(filters);
         setPayments(response.data || []);
-      } catch (err) {
-        console.error("Failed to fetch payments:", err);
+      } catch {
+        // Error handled by hook
       }
     };
 
@@ -97,6 +99,22 @@ export function Payments({
 
   const getStatusLabel = (status: string) => {
     return status.charAt(0) + status.slice(1).toLowerCase();
+  };
+
+  const canRetryPayment = (status: string) =>
+    status === "PENDING" || status === "PROCESSING" || status === "FAILED";
+
+  const handleRefreshStatus = async (paymentId: string) => {
+    setRefreshingId(paymentId);
+    try {
+      await refreshPaymentStatus(paymentId);
+      const response = await listAdminPayments({ page: 1, limit: 50 });
+      setPayments(response.data || []);
+    } catch {
+      // Error handled by hook
+    } finally {
+      setRefreshingId(null);
+    }
   };
 
   const handleSelectPayment = (payment: any) => {
@@ -214,6 +232,7 @@ export function Payments({
                 <TableHead>Status</TableHead>
                 <TableHead>Merchant</TableHead>
                 <TableHead>Timestamp</TableHead>
+                <TableHead>Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -242,6 +261,31 @@ export function Payments({
                   </TableCell>
                   <TableCell className="text-xs">
                     {new Date(payment.createdAt).toLocaleString()}
+                  </TableCell>
+                  <TableCell>
+                    {canRetryPayment(payment.status) && (
+                      <button
+                        onClick={() => handleRefreshStatus(payment.id)}
+                        disabled={refreshingId === payment.id}
+                        className="flex items-center gap-1 text-xs text-primary-500 hover:text-primary-400 disabled:opacity-50"
+                      >
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className={
+                            refreshingId === payment.id ? "animate-spin" : ""
+                          }
+                        >
+                          <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+                          <path d="M21 3v5h-5" />
+                        </svg>
+                        {refreshingId === payment.id ? "..." : "Retry"}
+                      </button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

@@ -24,6 +24,7 @@ export interface UsePaymentsResult {
   listMerchantPayments: (
     filters?: MerchantPaymentFilters,
   ) => Promise<UnwrappedMerchantPaymentListResponse>;
+  refreshPaymentStatus: (id: string) => Promise<void>;
 }
 
 export function usePayments(): UsePaymentsResult {
@@ -129,10 +130,29 @@ export function usePayments(): UsePaymentsResult {
     [setLoading, setError],
   );
 
+  const refreshPaymentStatus = useCallback(
+    async (id: string): Promise<void> => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        await apiClient.post(`/admin/payments/${id}/refresh-status`);
+      } catch (err) {
+        const error = err as ApiError;
+        setError(error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setLoading, setError],
+  );
+
   return {
     loading: state.loading,
     error: state.error,
     listAdminPayments,
     listMerchantPayments,
+    refreshPaymentStatus,
   };
 }

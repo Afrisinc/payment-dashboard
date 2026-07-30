@@ -5,14 +5,12 @@ import type {
   Payment,
   Merchant,
   WebhookDelivery,
-  MobilePayment,
 } from "@/types";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Container } from "@/components/layout/Container";
 import { Loader } from "@/components/ui/Loader";
 import { Dashboard } from "@/pages/Dashboard";
 import { Payments } from "@/pages/Payments";
-import { MobilePayments } from "@/pages/MobilePayments";
 import { Merchants } from "@/pages/Merchants";
 import { Webhooks } from "@/pages/Webhooks";
 import { setAuthToken } from "@/lib/api";
@@ -80,27 +78,11 @@ const navigationIcons = {
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
     </svg>
   ),
-  mobilePayments: (
-    <svg
-      width="15"
-      height="15"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
-      <path d="M12 18h.01" />
-    </svg>
-  ),
 };
 
 const pageLabels: Record<Page, string> = {
   dashboard: "Dashboard",
   payments: "Payments",
-  "mobile-payments": "Mobile Payments",
   merchants: "Merchants",
   webhooks: "Webhooks",
   reports: "Reports",
@@ -133,7 +115,6 @@ export default function App() {
     selectedPayment: undefined,
     selectedMerchant: undefined,
     selectedWebhook: undefined,
-    selectedMobilePayment: undefined,
     searchQuery: "",
     statusFilter: "ALL",
     providerFilter: "ALL",
@@ -147,7 +128,6 @@ export default function App() {
       selectedPayment: undefined,
       selectedMerchant: undefined,
       selectedWebhook: undefined,
-      selectedMobilePayment: undefined,
     }));
   };
 
@@ -172,20 +152,12 @@ export default function App() {
     }));
   };
 
-  const selectMobilePayment = (payment: MobilePayment) => {
-    setState((prev) => ({
-      ...prev,
-      selectedMobilePayment: payment,
-    }));
-  };
-
   const closeDrawer = () => {
     setState((prev) => ({
       ...prev,
       selectedPayment: undefined,
       selectedMerchant: undefined,
       selectedWebhook: undefined,
-      selectedMobilePayment: undefined,
     }));
   };
 
@@ -210,13 +182,6 @@ export default function App() {
       icon: navigationIcons.payments,
       isActive: state.currentPage === "payments",
       onClick: () => navigateTo("payments"),
-    },
-    {
-      id: "mobile-payments",
-      label: "Mobile Payments",
-      icon: navigationIcons.mobilePayments,
-      isActive: state.currentPage === "mobile-payments",
-      onClick: () => navigateTo("mobile-payments"),
     },
     {
       id: "merchants",
@@ -249,14 +214,6 @@ export default function App() {
             providerFilter={state.providerFilter}
             typeFilter={state.typeFilter}
             onUpdateFilters={updateFilters}
-          />
-        );
-      case "mobile-payments":
-        return (
-          <MobilePayments
-            selectedMobilePayment={state.selectedMobilePayment}
-            onSelectMobilePayment={selectMobilePayment}
-            onCloseDrawer={closeDrawer}
           />
         );
       case "merchants":

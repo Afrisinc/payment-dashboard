@@ -88,7 +88,6 @@ export interface WebhookDelivery {
 export type Page =
   | "dashboard"
   | "payments"
-  | "mobile-payments"
   | "merchants"
   | "webhooks"
   | "reports"
@@ -101,7 +100,6 @@ export interface AppState {
   selectedPayment?: Payment;
   selectedMerchant?: Merchant;
   selectedWebhook?: WebhookDelivery;
-  selectedMobilePayment?: MobilePayment;
   searchQuery: string;
   statusFilter: PaymentStatus | "ALL";
   providerFilter: Provider | "ALL";
