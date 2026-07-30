@@ -83,10 +83,9 @@ export function useMobilePayments(): UseMobilePaymentsResult {
         if (filters?.status) params.status = filters.status;
         if (filters?.type) params.type = filters.type;
 
-        const response = await apiClient.get<PaginatedApiResponse<MobilePayment[]>>(
-          "/mobile",
-          params,
-        );
+        const response = await apiClient.get<
+          PaginatedApiResponse<MobilePayment[]>
+        >("/mobile", params);
 
         return {
           data: response.data,

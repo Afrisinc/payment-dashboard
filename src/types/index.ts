@@ -6,7 +6,8 @@ export type WebhookDeliveryStatus =
   "DELIVERED" | "FAILED" | "RETRYING" | "PENDING";
 
 export type MobilePaymentType = "CASHIN" | "CASHOUT";
-export type MobilePaymentStatus = "PENDING" | "PROCESSING" | "SUCCESSFUL" | "FAILED";
+export type MobilePaymentStatus =
+  "PENDING" | "PROCESSING" | "SUCCESSFUL" | "FAILED";
 export type MobileProvider = "itec" | "paypack";
 
 export interface MobilePayment {

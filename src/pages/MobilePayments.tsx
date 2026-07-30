@@ -48,9 +48,15 @@ export function MobilePayments({
   } = useMobilePayments();
 
   const [payments, setPayments] = useState<MobilePayment[]>([]);
-  const [accountInfo, setAccountInfo] = useState<MobileAccountInfo | null>(null);
-  const [typeFilter, setTypeFilter] = useState<MobilePaymentType | "ALL">("ALL");
-  const [statusFilter, setStatusFilter] = useState<MobilePaymentStatus | "ALL">("ALL");
+  const [accountInfo, setAccountInfo] = useState<MobileAccountInfo | null>(
+    null,
+  );
+  const [typeFilter, setTypeFilter] = useState<MobilePaymentType | "ALL">(
+    "ALL",
+  );
+  const [statusFilter, setStatusFilter] = useState<MobilePaymentStatus | "ALL">(
+    "ALL",
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [drawerMode, setDrawerMode] = useState<DrawerMode>("details");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -81,7 +87,10 @@ export function MobilePayments({
 
   const fetchPayments = async () => {
     try {
-      const filters: { type?: MobilePaymentType; status?: MobilePaymentStatus } = {};
+      const filters: {
+        type?: MobilePaymentType;
+        status?: MobilePaymentStatus;
+      } = {};
       if (typeFilter !== "ALL") filters.type = typeFilter;
       if (statusFilter !== "ALL") filters.status = statusFilter;
 
@@ -295,7 +304,9 @@ export function MobilePayments({
           </Card>
           <Card>
             <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-fg-muted">Merchant</span>
+              <span className="text-xs font-medium text-fg-muted">
+                Merchant
+              </span>
               <span className="text-sm font-semibold text-fg">
                 {accountInfo.merchantName}
               </span>
@@ -303,7 +314,9 @@ export function MobilePayments({
           </Card>
           <Card>
             <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-fg-muted">Cashin Fee</span>
+              <span className="text-xs font-medium text-fg-muted">
+                Cashin Fee
+              </span>
               <span className="text-sm font-semibold text-fg">
                 {accountInfo.inRate}%
               </span>
@@ -311,7 +324,9 @@ export function MobilePayments({
           </Card>
           <Card>
             <div className="flex flex-col gap-1">
-              <span className="text-xs font-medium text-fg-muted">Cashout Fee</span>
+              <span className="text-xs font-medium text-fg-muted">
+                Cashout Fee
+              </span>
               <span className="text-sm font-semibold text-fg">
                 {accountInfo.outRate}%
               </span>
@@ -344,7 +359,9 @@ export function MobilePayments({
           <Select
             label="Type"
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value as MobilePaymentType | "ALL")}
+            onChange={(e) =>
+              setTypeFilter(e.target.value as MobilePaymentType | "ALL")
+            }
           >
             <option value="ALL">All Types</option>
             <option value="CASHIN">Cashin (Collect)</option>
@@ -353,7 +370,9 @@ export function MobilePayments({
           <Select
             label="Status"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as MobilePaymentStatus | "ALL")}
+            onChange={(e) =>
+              setStatusFilter(e.target.value as MobilePaymentStatus | "ALL")
+            }
           >
             <option value="ALL">All Status</option>
             <option value="SUCCESSFUL">Successful</option>
@@ -375,78 +394,80 @@ export function MobilePayments({
           </div>
         ) : (
           <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Reference</TableHead>
-                  <TableHead>Phone</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Fee</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPayments.map((payment, index) => (
-                  <TableRow key={`${payment.id}-${index}`}>
-                    <TableCell>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Reference</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Fee</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredPayments.map((payment, index) => (
+                <TableRow key={`${payment.id}-${index}`}>
+                  <TableCell>
+                    <button
+                      onClick={() => handleSelectPayment(payment)}
+                      className="text-primary-500 hover:underline font-mono text-xs"
+                    >
+                      {payment.ref || payment.orderId}
+                    </button>
+                  </TableCell>
+                  <TableCell className="font-mono text-xs">
+                    {payment.phoneNumber}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs font-semibold">
+                    {payment.amount.toLocaleString()} {payment.currency}
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getTypeBadgeVariant(payment.type)}>
+                      {payment.type === "CASHIN" ? "Collect" : "Send"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getStatusBadgeVariant(payment.status)}>
+                      {payment.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-xs text-fg-muted">
+                    {payment.fee?.toLocaleString() || 0} {payment.currency}
+                  </TableCell>
+                  <TableCell className="text-xs text-fg-muted">
+                    {new Date(payment.createdAt).toLocaleString()}
+                  </TableCell>
+                  <TableCell>
+                    {canRetryPayment(payment.status) && (
                       <button
-                        onClick={() => handleSelectPayment(payment)}
-                        className="text-primary-500 hover:underline font-mono text-xs"
+                        onClick={() => handleRefreshStatus(payment.id)}
+                        disabled={refreshingId === payment.id}
+                        className="flex items-center gap-1 text-xs text-primary-500 hover:text-primary-400 disabled:opacity-50"
                       >
-                        {payment.ref || payment.orderId}
-                      </button>
-                    </TableCell>
-                    <TableCell className="font-mono text-xs">
-                      {payment.phoneNumber}
-                    </TableCell>
-                    <TableCell className="font-mono text-xs font-semibold">
-                      {payment.amount.toLocaleString()} {payment.currency}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getTypeBadgeVariant(payment.type)}>
-                        {payment.type === "CASHIN" ? "Collect" : "Send"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusBadgeVariant(payment.status)}>
-                        {payment.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs text-fg-muted">
-                      {payment.fee?.toLocaleString() || 0} {payment.currency}
-                    </TableCell>
-                    <TableCell className="text-xs text-fg-muted">
-                      {new Date(payment.createdAt).toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      {canRetryPayment(payment.status) && (
-                        <button
-                          onClick={() => handleRefreshStatus(payment.id)}
-                          disabled={refreshingId === payment.id}
-                          className="flex items-center gap-1 text-xs text-primary-500 hover:text-primary-400 disabled:opacity-50"
+                        <svg
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className={
+                            refreshingId === payment.id ? "animate-spin" : ""
+                          }
                         >
-                          <svg
-                            width="12"
-                            height="12"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            className={refreshingId === payment.id ? "animate-spin" : ""}
-                          >
-                            <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
-                            <path d="M21 3v5h-5" />
-                          </svg>
-                          {refreshingId === payment.id ? "..." : "Retry"}
-                        </button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                          <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+                          <path d="M21 3v5h-5" />
+                        </svg>
+                        {refreshingId === payment.id ? "..." : "Retry"}
+                      </button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
       </Card>
 
@@ -461,55 +482,91 @@ export function MobilePayments({
             <DrawerContent>
               <div className="flex flex-col gap-6">
                 <div className="flex items-center gap-3">
-                  <Badge variant={getTypeBadgeVariant(selectedMobilePayment.type)}>
-                    {selectedMobilePayment.type === "CASHIN" ? "Collection" : "Disbursement"}
+                  <Badge
+                    variant={getTypeBadgeVariant(selectedMobilePayment.type)}
+                  >
+                    {selectedMobilePayment.type === "CASHIN"
+                      ? "Collection"
+                      : "Disbursement"}
                   </Badge>
-                  <Badge variant={getStatusBadgeVariant(selectedMobilePayment.status)}>
+                  <Badge
+                    variant={getStatusBadgeVariant(
+                      selectedMobilePayment.status,
+                    )}
+                  >
                     {selectedMobilePayment.status}
                   </Badge>
                 </div>
 
                 <div>
-                  <h3 className="text-xs font-medium text-fg-muted mb-2">Amount</h3>
+                  <h3 className="text-xs font-medium text-fg-muted mb-2">
+                    Amount
+                  </h3>
                   <div className="text-3xl font-bold text-fg">
-                    {selectedMobilePayment.amount.toLocaleString()} {selectedMobilePayment.currency}
+                    {selectedMobilePayment.amount.toLocaleString()}{" "}
+                    {selectedMobilePayment.currency}
                   </div>
                   {selectedMobilePayment.fee > 0 && (
                     <p className="text-xs text-fg-muted mt-1">
-                      Fee: {selectedMobilePayment.fee.toLocaleString()} {selectedMobilePayment.currency}
+                      Fee: {selectedMobilePayment.fee.toLocaleString()}{" "}
+                      {selectedMobilePayment.currency}
                     </p>
                   )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <h4 className="text-xs font-medium text-fg-muted mb-2">Reference</h4>
-                    <p className="text-xs font-mono text-fg">{selectedMobilePayment.ref}</p>
+                    <h4 className="text-xs font-medium text-fg-muted mb-2">
+                      Reference
+                    </h4>
+                    <p className="text-xs font-mono text-fg">
+                      {selectedMobilePayment.ref}
+                    </p>
                   </div>
                   <div>
-                    <h4 className="text-xs font-medium text-fg-muted mb-2">Order ID</h4>
-                    <p className="text-xs font-mono text-fg">{selectedMobilePayment.orderId}</p>
+                    <h4 className="text-xs font-medium text-fg-muted mb-2">
+                      Order ID
+                    </h4>
+                    <p className="text-xs font-mono text-fg">
+                      {selectedMobilePayment.orderId}
+                    </p>
                   </div>
                   <div>
-                    <h4 className="text-xs font-medium text-fg-muted mb-2">Phone Number</h4>
-                    <p className="text-xs font-mono text-fg">{selectedMobilePayment.phoneNumber}</p>
+                    <h4 className="text-xs font-medium text-fg-muted mb-2">
+                      Phone Number
+                    </h4>
+                    <p className="text-xs font-mono text-fg">
+                      {selectedMobilePayment.phoneNumber}
+                    </p>
                   </div>
                   <div>
-                    <h4 className="text-xs font-medium text-fg-muted mb-2">Provider</h4>
-                    <p className="text-xs text-fg">{selectedMobilePayment.provider || "—"}</p>
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-medium text-fg-muted mb-2">Created At</h4>
+                    <h4 className="text-xs font-medium text-fg-muted mb-2">
+                      Provider
+                    </h4>
                     <p className="text-xs text-fg">
-                      {new Date(selectedMobilePayment.createdAt).toLocaleString()}
+                      {selectedMobilePayment.provider || "—"}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-medium text-fg-muted mb-2">
+                      Created At
+                    </h4>
+                    <p className="text-xs text-fg">
+                      {new Date(
+                        selectedMobilePayment.createdAt,
+                      ).toLocaleString()}
                     </p>
                   </div>
                 </div>
 
                 {selectedMobilePayment.description && (
                   <div>
-                    <h4 className="text-xs font-medium text-fg-muted mb-2">Description</h4>
-                    <p className="text-xs text-fg">{selectedMobilePayment.description}</p>
+                    <h4 className="text-xs font-medium text-fg-muted mb-2">
+                      Description
+                    </h4>
+                    <p className="text-xs text-fg">
+                      {selectedMobilePayment.description}
+                    </p>
                   </div>
                 )}
               </div>
@@ -533,7 +590,9 @@ export function MobilePayments({
                     <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
                     <path d="M21 3v5h-5" />
                   </svg>
-                  {refreshingId === selectedMobilePayment.id ? "Refreshing..." : "Refresh Status"}
+                  {refreshingId === selectedMobilePayment.id
+                    ? "Refreshing..."
+                    : "Refresh Status"}
                 </Button>
               )}
               <Button variant="secondary" onClick={handleCloseDrawer}>
@@ -555,38 +614,64 @@ export function MobilePayments({
                 <Input
                   label="Order ID"
                   value={cashinForm.orderId}
-                  onChange={(e) => setCashinForm({ ...cashinForm, orderId: e.target.value })}
+                  onChange={(e) =>
+                    setCashinForm({ ...cashinForm, orderId: e.target.value })
+                  }
                   placeholder="Unique order identifier"
                 />
                 <Input
                   label="Phone Number"
                   value={cashinForm.phoneNumber}
-                  onChange={(e) => setCashinForm({ ...cashinForm, phoneNumber: e.target.value })}
+                  onChange={(e) =>
+                    setCashinForm({
+                      ...cashinForm,
+                      phoneNumber: e.target.value,
+                    })
+                  }
                   placeholder="0798760888"
                 />
                 <Input
                   label="Amount (RWF)"
                   type="number"
                   value={cashinForm.amount || ""}
-                  onChange={(e) => setCashinForm({ ...cashinForm, amount: Number(e.target.value) })}
+                  onChange={(e) =>
+                    setCashinForm({
+                      ...cashinForm,
+                      amount: Number(e.target.value),
+                    })
+                  }
                   placeholder="1000"
                 />
                 <Input
                   label="Customer Name (optional)"
                   value={cashinForm.customerName || ""}
-                  onChange={(e) => setCashinForm({ ...cashinForm, customerName: e.target.value })}
+                  onChange={(e) =>
+                    setCashinForm({
+                      ...cashinForm,
+                      customerName: e.target.value,
+                    })
+                  }
                   placeholder="John Doe"
                 />
                 <Input
                   label="Description (optional)"
                   value={cashinForm.description || ""}
-                  onChange={(e) => setCashinForm({ ...cashinForm, description: e.target.value })}
+                  onChange={(e) =>
+                    setCashinForm({
+                      ...cashinForm,
+                      description: e.target.value,
+                    })
+                  }
                   placeholder="Payment for services"
                 />
               </div>
             </DrawerContent>
             <DrawerFooter>
-              <Button variant="secondary" onClick={handleCloseDrawer} disabled={formLoading}>
+              <Button
+                variant="secondary"
+                onClick={handleCloseDrawer}
+                disabled={formLoading}
+              >
                 Cancel
               </Button>
               <Button onClick={handleCashinSubmit} disabled={formLoading}>
@@ -608,38 +693,64 @@ export function MobilePayments({
                 <Input
                   label="Payout ID"
                   value={cashoutForm.orderId}
-                  onChange={(e) => setCashoutForm({ ...cashoutForm, orderId: e.target.value })}
+                  onChange={(e) =>
+                    setCashoutForm({ ...cashoutForm, orderId: e.target.value })
+                  }
                   placeholder="Unique payout identifier"
                 />
                 <Input
                   label="Phone Number"
                   value={cashoutForm.phoneNumber}
-                  onChange={(e) => setCashoutForm({ ...cashoutForm, phoneNumber: e.target.value })}
+                  onChange={(e) =>
+                    setCashoutForm({
+                      ...cashoutForm,
+                      phoneNumber: e.target.value,
+                    })
+                  }
                   placeholder="0798760888"
                 />
                 <Input
                   label="Amount (RWF)"
                   type="number"
                   value={cashoutForm.amount || ""}
-                  onChange={(e) => setCashoutForm({ ...cashoutForm, amount: Number(e.target.value) })}
+                  onChange={(e) =>
+                    setCashoutForm({
+                      ...cashoutForm,
+                      amount: Number(e.target.value),
+                    })
+                  }
                   placeholder="500"
                 />
                 <Input
                   label="Recipient Name (optional)"
                   value={cashoutForm.recipientName || ""}
-                  onChange={(e) => setCashoutForm({ ...cashoutForm, recipientName: e.target.value })}
+                  onChange={(e) =>
+                    setCashoutForm({
+                      ...cashoutForm,
+                      recipientName: e.target.value,
+                    })
+                  }
                   placeholder="Jane Smith"
                 />
                 <Input
                   label="Description (optional)"
                   value={cashoutForm.description || ""}
-                  onChange={(e) => setCashoutForm({ ...cashoutForm, description: e.target.value })}
+                  onChange={(e) =>
+                    setCashoutForm({
+                      ...cashoutForm,
+                      description: e.target.value,
+                    })
+                  }
                   placeholder="Refund for order #123"
                 />
               </div>
             </DrawerContent>
             <DrawerFooter>
-              <Button variant="secondary" onClick={handleCloseDrawer} disabled={formLoading}>
+              <Button
+                variant="secondary"
+                onClick={handleCloseDrawer}
+                disabled={formLoading}
+              >
                 Cancel
               </Button>
               <Button onClick={handleCashoutSubmit} disabled={formLoading}>
