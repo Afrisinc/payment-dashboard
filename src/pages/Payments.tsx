@@ -135,8 +135,7 @@ export function Payments({
       }
     } catch (err) {
       const errorMsg =
-        (err as ApiError)?.message ||
-        "Failed to refresh payment status";
+        (err as ApiError)?.message || "Failed to refresh payment status";
       setRetryError(errorMsg);
       setTimeout(() => setRetryError(null), 5000);
     } finally {
