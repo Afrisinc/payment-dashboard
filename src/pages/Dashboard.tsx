@@ -73,7 +73,7 @@ export function Dashboard({ onSelectPayment }: DashboardProps) {
       type: payment.type === "mobile" ? "MOMO" : payment.type.toUpperCase(),
       status: payment.status,
       provider: payment.provider,
-      merchant: payment.merchantId,
+      merchant: payment.merchant,
       timestamp: payment.createdAt,
     };
     onSelectPayment(mappedPayment);
@@ -260,6 +260,7 @@ export function Dashboard({ onSelectPayment }: DashboardProps) {
                 <TableHead>Provider</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Merchant</TableHead>
+                <TableHead>Fee</TableHead>
                 <TableHead>Time</TableHead>
               </TableRow>
             </TableHeader>
@@ -286,6 +287,10 @@ export function Dashboard({ onSelectPayment }: DashboardProps) {
                   </TableCell>
                   <TableCell className="text-xs text-fg-muted">
                     {payment.merchant}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-fg-muted">
+                    {payment.feeAmount.toLocaleString()}{" "}
+                    {payment.currency.toUpperCase()} ({payment.feePercent}%)
                   </TableCell>
                   <TableCell className="text-xs">
                     {new Date(payment.createdAt).toLocaleTimeString()}
