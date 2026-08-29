@@ -35,10 +35,15 @@ export function Merchants({
     createMerchant,
     updateWebhookConfig,
     deleteWebhookConfig,
+    rotateApiKey,
   } = useMerchants();
   const [merchants, setMerchants] = useState<any[]>([]);
   const [revealedKeys, setRevealedKeys] = useState<Record<string, boolean>>({});
   const [copiedApiKey, setCopiedApiKey] = useState(false);
+  const [rotatedApiKeys, setRotatedApiKeys] = useState<Record<string, string>>(
+    {},
+  );
+  const [isRotatingKey, setIsRotatingKey] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -81,13 +86,32 @@ export function Merchants({
     }
   };
 
+  const handleRotateApiKey = async (merchantId: string) => {
+    if (
+      !window.confirm(
+        "Rotating the API key immediately invalidates the current key. Continue?",
+      )
+    )
+      return;
+
+    setIsRotatingKey(true);
+    try {
+      const apiKey = await rotateApiKey(merchantId);
+      setRotatedApiKeys((prev) => ({ ...prev, [merchantId]: apiKey }));
+      setRevealedKeys((prev) => ({ ...prev, [merchantId]: true }));
+    } catch (err) {
+      console.error("Failed to rotate API key:", err);
+    } finally {
+      setIsRotatingKey(false);
+    }
+  };
+
   const handleSelectMerchant = (merchant: any) => {
     const mappedMerchant: Merchant = {
       id: merchant.id,
       name: merchant.name,
       email: merchant.email,
       status: merchant.isActive ? "ACTIVE" : "INACTIVE",
-      apiKey: `sk_${merchant.id.slice(0, 8)}...`,
       webhookUrl: merchant.webhookUrl,
       createdAt: merchant.createdAt,
     };
@@ -306,89 +330,122 @@ export function Merchants({
                 {/* API Key Section */}
                 <div className="border-t border-border pt-4">
                   <h3 className="text-sm font-bold text-fg mb-4">API Key</h3>
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Input
-                        type={
-                          revealedKeys[selectedMerchant.id]
-                            ? "text"
-                            : "password"
-                        }
-                        value={selectedMerchant.apiKey}
-                        readOnly
-                        label="API Key"
-                        className="font-mono text-xs"
-                      />
-                      <button
-                        onClick={() => toggleKeyReveal(selectedMerchant.id)}
-                        className="mt-6 p-2 text-fg-muted hover:text-fg transition-colors"
+                  {rotatedApiKeys[selectedMerchant.id] ? (
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Input
+                          type={
+                            revealedKeys[selectedMerchant.id]
+                              ? "text"
+                              : "password"
+                          }
+                          value={rotatedApiKeys[selectedMerchant.id]}
+                          readOnly
+                          label="API Key"
+                          className="font-mono text-xs"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => toggleKeyReveal(selectedMerchant.id)}
+                          className="mt-6 p-2 text-fg-muted hover:text-fg transition-colors"
+                        >
+                          {revealedKeys[selectedMerchant.id] ? (
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <circle cx="12" cy="12" r="1"></circle>
+                              <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                            </svg>
+                          ) : (
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                              <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleCopyApiKey(
+                              rotatedApiKeys[selectedMerchant.id],
+                            )
+                          }
+                          className="mt-6 p-2 text-fg-muted hover:text-fg transition-colors"
+                          title="Copy API key"
+                        >
+                          {copiedApiKey ? (
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <path d="M20 6L9 17l-5-5"></path>
+                            </svg>
+                          ) : (
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                            >
+                              <rect
+                                x="9"
+                                y="9"
+                                width="13"
+                                height="13"
+                                rx="2"
+                              ></rect>
+                              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                          )}
+                        </button>
+                      </div>
+                      <p className="text-xs text-fg-muted mb-2">
+                        This key is only shown once. Store it securely — it
+                        won't be retrievable after you leave this page.
+                      </p>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        disabled={isRotatingKey}
+                        onClick={() => handleRotateApiKey(selectedMerchant.id)}
                       >
-                        {revealedKeys[selectedMerchant.id] ? (
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <circle cx="12" cy="12" r="1"></circle>
-                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-                          </svg>
-                        ) : (
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                          </svg>
-                        )}
-                      </button>
-                      <button
-                        onClick={() =>
-                          handleCopyApiKey(selectedMerchant.apiKey)
-                        }
-                        className="mt-6 p-2 text-fg-muted hover:text-fg transition-colors"
-                        title="Copy API key"
-                      >
-                        {copiedApiKey ? (
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <path d="M20 6L9 17l-5-5"></path>
-                          </svg>
-                        ) : (
-                          <svg
-                            width="16"
-                            height="16"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                          >
-                            <rect
-                              x="9"
-                              y="9"
-                              width="13"
-                              height="13"
-                              rx="2"
-                            ></rect>
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                          </svg>
-                        )}
-                      </button>
+                        {isRotatingKey ? "Rotating..." : "Rotate Again"}
+                      </Button>
                     </div>
-                  </div>
+                  ) : (
+                    <div>
+                      <p className="text-xs text-fg-muted mb-3">
+                        For security, API keys aren't stored in retrievable
+                        form. Rotate to generate a new key and view it once.
+                      </p>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        disabled={isRotatingKey}
+                        onClick={() => handleRotateApiKey(selectedMerchant.id)}
+                      >
+                        {isRotatingKey ? "Rotating..." : "Rotate API Key"}
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Webhook URL Section */}

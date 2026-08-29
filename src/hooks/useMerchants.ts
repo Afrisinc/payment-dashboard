@@ -35,6 +35,7 @@ export interface UseMerchantsResult {
     data: UpdateWebhookRequest,
   ) => Promise<WebhookConfigResponse>;
   deleteWebhookConfig: (merchantId: string) => Promise<void>;
+  rotateApiKey: (merchantId: string) => Promise<string>;
 }
 
 export function useMerchants(): UseMerchantsResult {
@@ -196,6 +197,27 @@ export function useMerchants(): UseMerchantsResult {
     [setLoading, setError],
   );
 
+  const rotateApiKey = useCallback(
+    async (merchantId: string): Promise<string> => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const response = await apiClient.post<{ apiKey: string }>(
+          `/admin/merchants/${merchantId}/rotate-key`,
+        );
+        return response.apiKey;
+      } catch (err) {
+        const error = err as ApiError;
+        setError(error);
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setLoading, setError],
+  );
+
   return {
     loading: state.loading,
     error: state.error,
@@ -205,5 +227,6 @@ export function useMerchants(): UseMerchantsResult {
     getWebhookConfig,
     updateWebhookConfig,
     deleteWebhookConfig,
+    rotateApiKey,
   };
 }

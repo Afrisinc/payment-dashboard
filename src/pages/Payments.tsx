@@ -50,11 +50,22 @@ export function Payments({
   const [payments, setPayments] = useState<any[]>([]);
   const [refreshingId, setRefreshingId] = useState<string | null>(null);
   const [retryError, setRetryError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    pageSize: 50,
+    hasMore: false,
+  });
+
+  useEffect(() => {
+    setPage(1);
+  }, [statusFilter, typeFilter, providerFilter]);
 
   useEffect(() => {
     const fetchPayments = async () => {
       try {
-        const filters: any = { page: 1, limit: 50 };
+        const filters: any = { page, limit: 50 };
 
         if (statusFilter !== "ALL") filters.status = statusFilter;
         if (typeFilter !== "ALL") {
@@ -67,19 +78,20 @@ export function Payments({
 
         const response = await listAdminPayments(filters);
         setPayments(response.data || []);
+        setPagination(response.pagination);
       } catch {
         // Error handled by hook
       }
     };
 
     fetchPayments();
-  }, [statusFilter, typeFilter, providerFilter, listAdminPayments]);
+  }, [page, statusFilter, typeFilter, providerFilter, listAdminPayments]);
 
   const filteredPayments = payments.filter((payment) => {
     const matchesSearch =
       !searchQuery ||
       payment.ref.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      payment.merchantId.toLowerCase().includes(searchQuery.toLowerCase());
+      payment.merchant.toLowerCase().includes(searchQuery.toLowerCase());
 
     return matchesSearch;
   });
@@ -128,7 +140,7 @@ export function Payments({
               : updatedPayment.type.toUpperCase(),
           status: updatedPayment.status,
           provider: updatedPayment.provider,
-          merchant: updatedPayment.merchantId,
+          merchant: updatedPayment.merchant ?? selectedPayment.merchant,
           timestamp: selectedPayment.timestamp,
         };
         onSelectPayment(mappedPayment);
@@ -151,7 +163,7 @@ export function Payments({
       type: payment.type === "mobile" ? "MOMO" : payment.type.toUpperCase(),
       status: payment.status,
       provider: payment.provider,
-      merchant: payment.merchantId,
+      merchant: payment.merchant,
       timestamp: payment.createdAt,
     };
     onSelectPayment(mappedPayment);
@@ -263,6 +275,7 @@ export function Payments({
                 <TableHead>Provider</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Merchant</TableHead>
+                <TableHead>Fee</TableHead>
                 <TableHead>Timestamp</TableHead>
                 <TableHead>Action</TableHead>
               </TableRow>
@@ -289,7 +302,11 @@ export function Payments({
                     </Badge>
                   </TableCell>
                   <TableCell className="text-xs text-fg-muted">
-                    {payment.merchantId}
+                    {payment.merchant}
+                  </TableCell>
+                  <TableCell className="font-mono text-xs text-fg-muted">
+                    {payment.feeAmount.toLocaleString()}{" "}
+                    {payment.currency.toUpperCase()} ({payment.feePercent}%)
                   </TableCell>
                   <TableCell className="text-xs">
                     {new Date(payment.createdAt).toLocaleString()}
@@ -323,6 +340,33 @@ export function Payments({
               ))}
             </TableBody>
           </Table>
+        )}
+        {filteredPayments.length > 0 && (
+          <div className="flex items-center justify-between pt-4">
+            <p className="text-xs text-fg-muted">
+              Page {pagination.page} of{" "}
+              {Math.max(1, Math.ceil(pagination.total / pagination.pageSize))} (
+              {pagination.total} total)
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              >
+                Previous
+              </Button>
+              <Button
+                variant="secondary"
+                size="sm"
+                disabled={!pagination.hasMore}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
         )}
       </Card>
 

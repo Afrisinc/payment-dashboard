@@ -8,12 +8,14 @@ export interface Payment {
   type: PaymentType;
   ref: string;
   orderId: string;
-  merchantId: string;
+  merchant: string;
   amount: number;
   currency: string;
   status: PaymentStatus;
   provider: PaymentProvider;
   phoneNumber: string;
+  feeAmount: number;
+  feePercent: number;
   createdAt: string;
 }
 

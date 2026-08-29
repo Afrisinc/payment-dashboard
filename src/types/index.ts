@@ -69,7 +69,6 @@ export interface Merchant {
   name: string;
   email: string;
   status: "ACTIVE" | "INACTIVE";
-  apiKey: string;
   webhookUrl?: string;
   webhookSecret?: string;
   createdAt: string;
