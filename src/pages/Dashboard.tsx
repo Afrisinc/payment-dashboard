@@ -285,7 +285,7 @@ export function Dashboard({ onSelectPayment }: DashboardProps) {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-xs text-fg-muted">
-                    {payment.merchantId}
+                    {payment.merchant}
                   </TableCell>
                   <TableCell className="text-xs">
                     {new Date(payment.createdAt).toLocaleTimeString()}
