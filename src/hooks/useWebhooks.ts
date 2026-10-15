@@ -4,6 +4,8 @@ import type {
   WebhookDeliveryListResponse,
   UnwrappedWebhookDeliveryListResponse,
   WebhookDeliveryFilters,
+  WebhookDelivery,
+  WebhookDeliveryResponse,
   ApiError,
 } from "@/types/payment";
 
@@ -18,7 +20,7 @@ export interface UseWebhooksResult {
   listWebhookDeliveries: (
     filters?: WebhookDeliveryFilters,
   ) => Promise<UnwrappedWebhookDeliveryListResponse>;
-  retryWebhookDelivery: (deliveryId: string) => Promise<void>;
+  retryWebhookDelivery: (deliveryId: string) => Promise<WebhookDelivery>;
 }
 
 export function useWebhooks(): UseWebhooksResult {
@@ -49,9 +51,6 @@ export function useWebhooks(): UseWebhooksResult {
         if (filters?.limit !== undefined) params.limit = filters.limit;
         if (filters?.status) params.status = filters.status;
         if (filters?.merchantId) params.merchantId = filters.merchantId;
-        if (filters?.search) params.search = filters.search;
-        if (filters?.sortBy) params.sortBy = filters.sortBy;
-        if (filters?.sortOrder) params.sortOrder = filters.sortOrder;
 
         const response = await apiClient.get<WebhookDeliveryListResponse>(
           "/admin/webhooks",
@@ -77,22 +76,15 @@ export function useWebhooks(): UseWebhooksResult {
     [setLoading, setError],
   );
 
+  // Independent of the list loading state so the table stays visible while retrying
   const retryWebhookDelivery = useCallback(
-    async (deliveryId: string): Promise<void> => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        await apiClient.post(`/admin/webhooks/${deliveryId}/retry`);
-      } catch (err) {
-        const error = err as ApiError;
-        setError(error);
-        throw error;
-      } finally {
-        setLoading(false);
-      }
+    async (deliveryId: string): Promise<WebhookDelivery> => {
+      const response = await apiClient.post<WebhookDeliveryResponse>(
+        `/admin/webhooks/${deliveryId}/retry`,
+      );
+      return response.data;
     },
-    [setLoading, setError],
+    [],
   );
 
   return {

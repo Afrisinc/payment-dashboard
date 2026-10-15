@@ -88,6 +88,7 @@ class ApiClient {
       const error: ApiError = {
         code: String(response.status),
         message: `HTTP ${response.status}`,
+        status: response.status,
       };
 
       try {

@@ -174,14 +174,29 @@ export interface ChartData {
 export type ChartDataResponse = ApiResponseWrapper<ChartData>;
 export type UnwrappedChartDataResponse = ChartData;
 
+export type WebhookDeliveryStatus = "PENDING" | "DELIVERED" | "FAILED";
+
+/** Merchant webhook delivery log entry (GET /admin/webhooks) */
 export interface WebhookDelivery {
   id: string;
   merchantId: string;
-  status: "DELIVERED" | "FAILED" | "RETRYING" | "PENDING";
-  attempt: number;
-  timestamp: string;
+  merchantName: string | null;
+  /** Merchant webhook URL as currently configured */
+  webhookUrl: string | null;
+  paymentId: string;
+  eventType: string;
+  /** Exact body sent to the merchant */
   payload: Record<string, unknown>;
-  response?: string;
+  status: WebhookDeliveryStatus;
+  attempts: number;
+  maxAttempts: number;
+  lastAttempt: string | null;
+  nextRetry: string | null;
+  /** HTTP status returned by the merchant endpoint */
+  responseCode: number | null;
+  errorMessage: string | null;
+  createdAt: string;
+  deliveredAt: string | null;
 }
 
 export interface WebhookConfig {
@@ -191,15 +206,13 @@ export interface WebhookConfig {
 export type WebhookDeliveryListResponse = PaginatedApiResponse<WebhookDelivery>;
 export type UnwrappedWebhookDeliveryListResponse =
   PaginatedData<WebhookDelivery>;
+export type WebhookDeliveryResponse = ApiResponseWrapper<WebhookDelivery>;
 
 export interface WebhookDeliveryFilters {
   page?: number;
   limit?: number;
-  status?: "DELIVERED" | "FAILED" | "RETRYING" | "PENDING";
+  status?: WebhookDeliveryStatus;
   merchantId?: string;
-  search?: string;
-  sortBy?: string;
-  sortOrder?: "asc" | "desc";
 }
 
 export interface CreateMerchantRequest {
@@ -228,5 +241,66 @@ export interface UpdateWebhookRequest {
 export interface ApiError {
   code: string;
   message: string;
+  /** HTTP status; undefined when the request never got a response (network failure) */
+  status?: number;
   details?: Record<string, unknown>;
 }
+
+// ============================================================================
+// Payouts (ITEC cashout on behalf of a merchant)
+// ============================================================================
+
+export type PayoutStatus = "PENDING" | "PROCESSING" | "SUCCESSFUL" | "FAILED";
+
+export interface MerchantBalance {
+  merchantId: string;
+  collected: number;
+  collectionFees: number;
+  paidOut: number;
+  pendingPayouts: number;
+  available: number;
+  currency: string;
+  payoutsEnabled: boolean;
+}
+
+export interface Payout {
+  id: string;
+  ref: string;
+  orderId: string;
+  merchantId: string;
+  merchantName: string;
+  amount: number;
+  currency: string;
+  status: PayoutStatus;
+  type: "CASHIN" | "CASHOUT";
+  provider: string | null;
+  phoneNumber: string;
+  customerName: string | null;
+  fee: number;
+  failureReason: string | null;
+  createdAt: string;
+  processedAt: string | null;
+}
+
+export interface CreatePayoutRequest {
+  orderId: string;
+  amount: number;
+  phoneNumber: string;
+  recipientName?: string;
+  description?: string;
+}
+
+export interface PayoutResult {
+  id: string;
+  ref: string;
+  orderId: string;
+  amount: number;
+  currency: string;
+  phoneNumber: string;
+  status: PayoutStatus;
+  createdAt: string;
+}
+
+export type MerchantBalanceResponse = ApiResponseWrapper<MerchantBalance>;
+export type PayoutListResponse = PaginatedApiResponse<Payout>;
+export type PayoutResultResponse = ApiResponseWrapper<PayoutResult>;

@@ -1,9 +1,11 @@
+import type { WebhookDelivery } from "./payment";
+
+export type { WebhookDelivery, WebhookDeliveryStatus } from "./payment";
+
 export type PaymentType = "MOMO" | "CARD" | "STRIPE";
 export type PaymentStatus =
   "SUCCESSFUL" | "PENDING" | "PROCESSING" | "FAILED" | "CANCELLED";
 export type Provider = "ITEC" | "PAYPACK" | "STRIPE";
-export type WebhookDeliveryStatus =
-  "DELIVERED" | "FAILED" | "RETRYING" | "PENDING";
 
 export type MobilePaymentType = "CASHIN" | "CASHOUT";
 export type MobilePaymentStatus =
@@ -74,19 +76,10 @@ export interface Merchant {
   createdAt: string;
 }
 
-export interface WebhookDelivery {
-  id: string;
-  merchantId: string;
-  status: WebhookDeliveryStatus;
-  attempt: number;
-  timestamp: string;
-  payload: Record<string, unknown>;
-  response?: string;
-}
-
 export type Page =
   | "dashboard"
   | "payments"
+  | "payouts"
   | "merchants"
   | "webhooks"
   | "reports"

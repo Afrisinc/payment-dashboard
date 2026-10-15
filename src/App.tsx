@@ -11,6 +11,7 @@ import { Container } from "@/components/layout/Container";
 import { Loader } from "@/components/ui/Loader";
 import { Dashboard } from "@/pages/Dashboard";
 import { Payments } from "@/pages/Payments";
+import { Payouts } from "@/pages/Payouts";
 import { Merchants } from "@/pages/Merchants";
 import { Webhooks } from "@/pages/Webhooks";
 import { setAuthToken } from "@/lib/api";
@@ -45,6 +46,21 @@ const navigationIcons = {
       <circle cx="12" cy="12" r="1" />
       <path d="M21 17v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2" />
       <path d="M21 9V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v2" />
+    </svg>
+  ),
+  payouts: (
+    <svg
+      width="15"
+      height="15"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <line x1="22" y1="2" x2="11" y2="13" />
+      <polygon points="22 2 15 22 11 13 2 9 22 2" />
     </svg>
   ),
   merchants: (
@@ -83,6 +99,7 @@ const navigationIcons = {
 const pageLabels: Record<Page, string> = {
   dashboard: "Dashboard",
   payments: "Payments",
+  payouts: "Payouts",
   merchants: "Merchants",
   webhooks: "Webhooks",
   reports: "Reports",
@@ -184,6 +201,13 @@ export default function App() {
       onClick: () => navigateTo("payments"),
     },
     {
+      id: "payouts",
+      label: "Payouts",
+      icon: navigationIcons.payouts,
+      isActive: state.currentPage === "payouts",
+      onClick: () => navigateTo("payouts"),
+    },
+    {
       id: "merchants",
       label: "Merchants",
       icon: navigationIcons.merchants,
@@ -216,6 +240,8 @@ export default function App() {
             onUpdateFilters={updateFilters}
           />
         );
+      case "payouts":
+        return <Payouts />;
       case "merchants":
         return (
           <Merchants
